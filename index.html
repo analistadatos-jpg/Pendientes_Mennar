@@ -345,11 +345,12 @@
       } else if (val instanceof Date && !isNaN(val)) {
         dObj = val;
       } else if (typeof val === 'string') {
-        const timestamp = Date.parse(val);
+        const strLimpia = val.trim().split(' ')[0]; // Descarta componente de hora si viene en el string
+        const timestamp = Date.parse(strLimpia);
         if (!isNaN(timestamp)) {
           dObj = new Date(timestamp);
         } else {
-          const partes = val.trim().split(' ')[0].split(/[\/\-]/);
+          const partes = strLimpia.split(/[\/\-]/);
           if (partes.length === 3) {
             if (partes[0].length === 4) {
               dObj = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
@@ -478,8 +479,8 @@
             row['Diferencia Real'] = saldoPositivo;
             row['Diferencia'] = saldoPositivo;
             row['Estado Final Mennar'] = est;
-            row['Fecha Subsanación'] = ajuste.fechaSubsanacion || ajuste.fecha || '';
-            row['Entrega Efectiva'] = ajuste.fechaEntregaEfectiva || '';
+            row['Fecha Subsanación'] = formatearFechaEstandar(ajuste.fechaSubsanacion || ajuste.fecha || '');
+            row['Entrega Efectiva'] = formatearFechaEstandar(ajuste.fechaEntregaEfectiva || '');
           }
         }
       }
@@ -764,8 +765,8 @@
         let entregaEfectiva = '-';
 
         if (estadoFinal !== 'Pendiente Activo') {
-          fechaSubsanacion = row['Fecha Subsanación'] || '-';
-          entregaEfectiva = row['Entrega Efectiva'] || '-';
+          fechaSubsanacion = formatearFechaEstandar(row['Fecha Subsanación']) || '-';
+          entregaEfectiva = formatearFechaEstandar(row['Entrega Efectiva']) || '-';
         }
 
         const stockOrigenNum = parseFloat(row['Inventario Disponible en el punto de origen'] || 0);
@@ -906,9 +907,9 @@
         
         let fechaEfectiva = "";
         if (inputFecha !== null && inputFecha.trim() !== "") {
-          const fechaParsed = Date.parse(inputFecha.trim());
-          if (!isNaN(fechaParsed)) {
-            fechaEfectiva = inputFecha.trim();
+          const fEfectivaFormateada = formatearFechaEstandar(inputFecha.trim());
+          if (fEfectivaFormateada) {
+            fechaEfectiva = fEfectivaFormateada;
           } else {
             alert('Formato de fecha no reconocido. Se dejará la fecha de entrega en blanco.');
           }
@@ -919,7 +920,8 @@
         item['Diferencia'] = saldo;
         let estadoFinal = saldo === 0 ? 'Subsanado' : (cantidadIngresada > 0 ? 'Pendiente Parcial' : 'Pendiente Activo');
         
-        const fechaRegistroSys = new Date().toISOString().replace('T', ' ').substring(0, 10);
+        // Fecha solo en formato AAAA-MM-DD sin hora
+        const fechaRegistroSys = formatearFechaEstandar(new Date());
 
         item['Fecha Subsanación'] = fechaRegistroSys;
         item['Estado Final Mennar'] = estadoFinal;
@@ -1001,8 +1003,8 @@
           else if (col === 'Inventario Disponible en el punto de origen') val = row['Inventario Disponible en el punto de origen'] || 0;
           else if (col === 'Inventario BODEGA PENDIENTES NEPS') val = row['Inventario BODEGA PENDIENTES NEPS'] || 0;
           else if (col === 'Inventario BODEGA PRINCIPAL CEDI') val = row['Inventario BODEGA PRINCIPAL CEDI'] || 0;
-          else if (col === 'Fecha Subsanación') val = row['Fecha Subsanación'] || '';
-          else if (col === 'Entrega Efectiva') val = row['Entrega Efectiva'] || '';
+          else if (col === 'Fecha Subsanación') val = formatearFechaEstandar(row['Fecha Subsanación']) || '';
+          else if (col === 'Entrega Efectiva') val = formatearFechaEstandar(row['Entrega Efectiva']) || '';
           else if (col === 'Diferencia') val = row['Diferencia'] !== undefined ? row['Diferencia'] : obtenerValorColumna(row, ['Diferencia Real']);
 
           return `"${(val !== undefined && val !== null ? val : '').toString().replace(/"/g, '""')}"`;
