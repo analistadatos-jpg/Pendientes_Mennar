@@ -312,7 +312,7 @@
     function norm(val) {
       if (!val) return '';
       if (normCache[val] !== undefined) return normCache[val];
-      const res = val.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const res = val.toString().toLowerCase().trim().replace(/[^a-z0-9]/g, '');
       normCache[val] = res;
       return res;
     }
@@ -329,7 +329,12 @@
       return '';
     }
 
-    // FORMATO DE FECHA ESTRICTO Y LIMPIO AAAA-MM-DD
+    function generarIdUnico(row) {
+      const doc = obtenerValorColumna(row, ['Documento']);
+      const cod = obtenerValorColumna(row, ['Codigo Articulo', 'Código Artículo']);
+      return norm(doc) + '_' + norm(cod);
+    }
+
     function formatearFechaEstandar(val) {
       if (!val) return '';
       let dObj = null;
@@ -454,9 +459,7 @@
       if (!mapaAjustes) return;
       for (let i = 0; i < datosPendientes.length; i++) {
         const row = datosPendientes[i];
-        const doc = obtenerValorColumna(row, ['Documento']);
-        const cod = obtenerValorColumna(row, ['Codigo Articulo', 'Código Artículo']);
-        const idUnico = norm(doc + '_' + cod);
+        const idUnico = generarIdUnico(row);
 
         if (mapaAjustes[idUnico]) {
           const ajuste = mapaAjustes[idUnico];
@@ -880,7 +883,7 @@
       if (entrada !== null && entrada.trim() !== '' && !isNaN(entrada)) {
         const cantidadIngresada = parseInt(entrada);
         const doc = obtenerValorColumna(item, ['Documento']);
-        const idUnico = norm(doc + '_' + codigoArt);
+        const idUnico = generarIdUnico(item);
 
         let cambiosExistentes = {};
         try { cambiosExistentes = JSON.parse(localStorage.getItem(CHANGES_KEY)) || {}; } catch(e){}
@@ -948,7 +951,6 @@
       }
     }
 
-    // COLA ASÍNCRONA CON RETRY / EXP-BACKOFF PARA MAS DE 40 OPERADORES SIMULTÁNEOS
     const queueEnvios = [];
     let enviandoEnCola = false;
 
