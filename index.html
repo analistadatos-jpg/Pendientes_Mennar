@@ -256,7 +256,7 @@
             <th>Cédula</th>
             <th>Paciente</th>
             <th>Medicamento</th>
-            <th onclick="cambiarOrdenClick('codigo_asc')">Código Art. ↕️</th>
+            <th onclick="cambiarOrdenClick('codigo_asc')">Código Art. ↕</th>
             <th>Código Cont.</th>
             <th>Cant. Pend.</th>
             <th>Inv. Origen</th>
@@ -273,7 +273,7 @@
     </div>
 
     <div class="pagination">
-      <button class="btn-pag" onclick="cambiarPagina(-1)">⬅️ Anterior</button>
+      <button class="btn-pag" onclick="cambiarPagina(-1)">⬅️️ Anterior</button>
       <span id="infoPagina" class="stats">Página 1 de 1</span>
       <button class="btn-pag" onclick="cambiarPagina(1)">Siguiente ➡️</button>
     </div>
@@ -345,19 +345,24 @@
       } else if (val instanceof Date && !isNaN(val)) {
         dObj = val;
       } else if (typeof val === 'string') {
-        const strLimpia = val.trim().split(' ')[0]; // Descarta componente de hora si viene en el string
-        const timestamp = Date.parse(strLimpia);
-        if (!isNaN(timestamp)) {
-          dObj = new Date(timestamp);
-        } else {
-          const partes = strLimpia.split(/[\/\-]/);
-          if (partes.length === 3) {
-            if (partes[0].length === 4) {
-              dObj = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
-            } else {
-              dObj = new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
-            }
+        const strLimpia = val.trim().split(' ')[0];
+        const partes = strLimpia.split(/[\/\-]/);
+        
+        if (partes.length === 3) {
+          if (partes[2].length === 4) {
+            const dia = parseInt(partes[0], 10);
+            const mes = parseInt(partes[1], 10) - 1;
+            const anio = parseInt(partes[2], 10);
+            dObj = new Date(anio, mes, dia);
+          } else if (partes[0].length === 4) {
+            const anio = parseInt(partes[0], 10);
+            const mes = parseInt(partes[1], 10) - 1;
+            const dia = parseInt(partes[2], 10);
+            dObj = new Date(anio, mes, dia);
           }
+        } else {
+          const timestamp = Date.parse(strLimpia);
+          if (!isNaN(timestamp)) dObj = new Date(timestamp);
         }
       }
 
@@ -370,13 +375,13 @@
     }
 
     function obtenerMesDeFila(row) {
-      let mesText = obtenerValorColumna(row, ['Mes_Dispensacion', 'Mes Dispensacion', 'Mes Dispensación']);
+      let mesText = obtenerValorColumna(row, ['Mes_Dispensacion', 'Mes Dispensacion', 'Mes Dispensación', 'Mes']);
       if (!mesText) {
         const rawFecha = obtenerValorColumna(row, ['Fecha Origen Dispensacion', 'Fecha Origen', 'Fecha Dispensacion']);
         const strFecha = formatearFechaEstandar(rawFecha);
         if (strFecha && strFecha.includes('-')) {
           const partes = strFecha.split('-');
-          const mesNum = parseInt(partes[1]) - 1;
+          const mesNum = parseInt(partes[1], 10) - 1;
           const nombresMeses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
           if (mesNum >= 0 && mesNum < 12) mesText = nombresMeses[mesNum];
         }
@@ -920,7 +925,6 @@
         item['Diferencia'] = saldo;
         let estadoFinal = saldo === 0 ? 'Subsanado' : (cantidadIngresada > 0 ? 'Pendiente Parcial' : 'Pendiente Activo');
         
-        // Fecha solo en formato AAAA-MM-DD sin hora
         const fechaRegistroSys = formatearFechaEstandar(new Date());
 
         item['Fecha Subsanación'] = fechaRegistroSys;
